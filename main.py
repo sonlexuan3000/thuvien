@@ -92,7 +92,7 @@ def prcocess_code():
         time.sleep(30)
 
 thread = threading.Thread(target=prcocess_code)
-#thread.start()
+thread.start()
 if __name__ == '__main__':
     
     app = Application.builder().token(TOKEN).build()
