@@ -5,16 +5,23 @@ import telegram
 import requests
 import schedule
 import time
+import threading
 import re
 from datetime import datetime
-from dotenv import load_dotenv
+from dataclasses import dataclass
+
 ma=''
 TOKEN: Final = load_dotenv().get('TOKEN')
 BOT_USERNAME: Final = load_dotenv().get('BOT_USERNAME')
-
 bot = telegram.Bot(TOKEN)
 chat_id = ''
+class checkincode:
+    def __init__(self, code, time):
+        self.code = code
+        self.time = time
 
+    
+pending=[]
 async def start_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text('hello')
 
@@ -62,24 +69,36 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
     else:
         await update.message.reply_text('oke')
         await update.message.reply_text(response.text)
-        print(response.text)
+        print(extract_booking_time(response.text))
         timestamp = extract_booking_time(response.text).timestamp()
-        delay = timestamp - current_timestamp
-        if delay > 0:
-            await update.message.reply_text(f"Checkin will be done in {delay} seconds")
-            time.sleep(delay)
-            response = requests.post(url, data=payload, headers=headers)
-            await update.message.reply_text("Your checkin has been done")
-        else:
-            await update.message.reply_text("The booking time has already passed!")
+        p1=checkincode(update.message.text,timestamp)
+        pending.append(p1)
 
-        
+async def pending_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    cnt = 0
+    for code in pending:
+        cnt = cnt+1
+        await update.message.reply_text(f"code number {cnt}:")
+        await update.message.reply_text(f"Code: {code.code}") 
+        await update.message.reply_text(f"Remain time:{code.time/3600} hour(s)")
 
+def prcocess_code():
+    while True:
+        for code in pending:
+            print(code.code)
+            current_timestamp = time.time()
+            if(current_timestamp>code.time):
+                checkin(code.code)
+        time.sleep(30)
+
+thread = threading.Thread(target=prcocess_code)
+#thread.start()
 if __name__ == '__main__':
+    
     app = Application.builder().token(TOKEN).build()
-
     app.add_handler(CommandHandler('start',start_command))
     app.add_handler(CommandHandler('help',help_command))
-
+    app.add_handler(CommandHandler('pending',pending_command))
     app.add_handler(MessageHandler(filters.TEXT, handle_message))
+    #thread.join()
     app.run_polling(poll_interval=3)
