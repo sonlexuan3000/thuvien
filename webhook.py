@@ -6,11 +6,11 @@ import threading
 import re
 from datetime import datetime
 from dataclasses import dataclass
-import config
+
 app = Flask(__name__)
 
 # Replace 'YOUR_BOT_TOKEN' with the actual token provided by BotFather
-BOT_TOKEN=config.BOT_TOKEN
+BOT_TOKEN = '7663753275:AAFeMC5sGWk00mWgQHPTx-waGh64i3MLGR8'
 
 @app.route('/webhook', methods=['POST'])
 def webhook():
@@ -79,6 +79,10 @@ def xulicode(chat_id, text):
     url = f'https://api.telegram.org/bot{BOT_TOKEN}/sendMessage'
     payload1 = {
         "code": text,
+    }
+    proxies = {
+        'http': 'http://proxy.pythonanywhere.com:3128',
+        'https': 'http://proxy.pythonanywhere.com:3128',
     }
     headers = {
         'Referer': 'https://libcalendar.ntu.edu.sg/r/checkin',
